@@ -1,0 +1,2098 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weekly Tracker</title>
+
+  <!--
+    WORDPRESS EMBED-SAFE SCOPED STYLES (Zero External Dependencies)
+    All component styles are scoped under #wtt-app so this tracker works both standalone
+    and pasted directly into a WordPress Custom HTML block without affecting the active theme.
+  -->
+  <style id="wtt-styles">
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #wtt-app,
+    #wtt-app *,
+    #wtt-app *::before,
+    #wtt-app *::after {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #wtt-app {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+
+    #wtt-app.wtt-pip-root {
+      max-width: 100%;
+      padding: 12px;
+      min-height: 100vh;
+      background-color: #f8fafc;
+    }
+
+    #wtt-app .wtt-hidden {
+      display: none !important;
+    }
+
+    /* Card surface */
+    #wtt-app .wtt-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+
+    /* Local Storage Access Banner & Status Badge */
+    #wtt-app .wtt-storage-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+    }
+
+    #wtt-app .wtt-storage-banner.is-hidden {
+      display: none;
+    }
+
+    #wtt-app .wtt-storage-banner-text {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.875rem;
+      color: #166534;
+      font-weight: 500;
+      flex: 1 1 260px;
+    }
+
+    #wtt-app .wtt-storage-banner-text svg {
+      flex-shrink: 0;
+    }
+
+    #wtt-app .wtt-storage-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #wtt-app .wtt-storage-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #15803d;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-top: 4px;
+    }
+
+    #wtt-app .wtt-storage-status.is-error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+
+    #wtt-app .wtt-storage-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #16a34a;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    #wtt-app .wtt-storage-status.is-error .wtt-storage-dot {
+      background-color: #dc2626;
+    }
+
+    /* Top Header Layout */
+    #wtt-app .wtt-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+
+    #wtt-app .wtt-title {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    /* Week Switcher */
+    #wtt-app .wtt-month-nav {
+      display: inline-flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    #wtt-app .wtt-month-btn {
+      appearance: none;
+      background: transparent;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 0;
+    }
+
+    #wtt-app .wtt-month-btn:hover {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    #wtt-app .wtt-month-btn:focus-visible {
+      outline: 2px solid #16a34a;
+      outline-offset: 1px;
+    }
+
+    #wtt-app .wtt-month-label {
+      min-width: 155px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      padding: 0 8px;
+      user-select: none;
+    }
+
+    /* Header Right Controls: Add Task + Home Widget Button */
+    #wtt-app .wtt-header-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 320px;
+      justify-content: flex-end;
+    }
+
+    #wtt-app .wtt-add-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 220px;
+      max-width: 320px;
+      justify-content: flex-end;
+    }
+
+    #wtt-app .wtt-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      font-size: 0.875rem;
+      color: #0f172a;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #wtt-app .wtt-input:focus {
+      border-color: #16a34a;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+    }
+
+    #wtt-app .wtt-btn-primary {
+      appearance: none;
+      height: 38px;
+      padding: 0 14px;
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background-color 0.15s ease;
+    }
+
+    #wtt-app .wtt-btn-primary:hover {
+      background: #15803d;
+    }
+
+    #wtt-app .wtt-btn-primary:focus-visible {
+      outline: 2px solid #16a34a;
+      outline-offset: 2px;
+    }
+
+    #wtt-app .wtt-btn-secondary {
+      appearance: none;
+      height: 38px;
+      padding: 0 13px;
+      background: #ffffff;
+      color: #334155;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    #wtt-app .wtt-btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    #wtt-app .wtt-btn-secondary:focus-visible {
+      outline: 2px solid #16a34a;
+      outline-offset: 2px;
+    }
+
+    /* Task Table Container */
+    #wtt-app .wtt-table-card {
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    #wtt-app .wtt-table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #wtt-app .wtt-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 680px;
+    }
+
+    #wtt-app .wtt-table th,
+    #wtt-app .wtt-table td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 16px;
+      vertical-align: middle;
+    }
+
+    #wtt-app .wtt-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    #wtt-app .wtt-table thead th {
+      background: #f8fafc;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #334155;
+      text-align: center;
+      user-select: none;
+    }
+
+    #wtt-app .wtt-table thead th.wtt-col-task {
+      text-align: left;
+      min-width: 220px;
+      max-width: 300px;
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    #wtt-app .wtt-week-title {
+      display: block;
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.85rem;
+    }
+
+    /* Sticky First Column on Mobile Horizontal Scroll */
+    #wtt-app .wtt-table tbody td.wtt-cell-task {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      font-weight: 500;
+      color: #0f172a;
+      transition: background-color 0.15s ease;
+    }
+
+    #wtt-app .wtt-table tbody tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    #wtt-app .wtt-table tbody tr:hover td.wtt-cell-task {
+      background-color: #f8fafc;
+    }
+
+    /* Task Row Item & Actions */
+    #wtt-app .wtt-task-row-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 28px;
+    }
+
+    #wtt-app .wtt-task-name {
+      font-size: 0.925rem;
+      color: #0f172a;
+      word-break: break-word;
+      cursor: pointer;
+    }
+
+    #wtt-app .wtt-task-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    #wtt-app .wtt-icon-btn {
+      appearance: none;
+      background: transparent;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    #wtt-app .wtt-icon-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    #wtt-app .wtt-icon-btn.wtt-delete-btn:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Inline Rename Editor */
+    #wtt-app .wtt-rename-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    #wtt-app .wtt-rename-input {
+      flex: 1;
+      min-width: 100px;
+      height: 30px;
+      padding: 0 8px;
+      font-size: 0.875rem;
+      border: 1px solid #16a34a;
+      border-radius: 6px;
+      outline: none;
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Custom Rounded Checkbox Controls */
+    #wtt-app .wtt-cell-check {
+      text-align: center;
+      padding: 10px 12px;
+    }
+
+    #wtt-app .wtt-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      user-select: none;
+      position: relative;
+    }
+
+    #wtt-app .wtt-checkbox-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    #wtt-app .wtt-checkbox-box {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #cbd5e1;
+      border-radius: 7px;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    #wtt-app .wtt-checkbox-label:hover .wtt-checkbox-box,
+    #wtt-app .wtt-widget-row-label:hover .wtt-checkbox-box {
+      border-color: #94a3b8;
+    }
+
+    #wtt-app .wtt-checkbox-input:focus-visible + .wtt-checkbox-box {
+      outline: 2px solid #16a34a;
+      outline-offset: 2px;
+    }
+
+    #wtt-app .wtt-checkbox-input:checked + .wtt-checkbox-box {
+      background-color: #16a34a;
+      border-color: #16a34a;
+    }
+
+    #wtt-app .wtt-checkbox-box svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 3;
+      opacity: 0;
+      transform: scale(0.7);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    #wtt-app .wtt-checkbox-input:checked + .wtt-checkbox-box svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Empty State */
+    #wtt-app .wtt-empty-state {
+      text-align: center;
+      padding: 36px 20px;
+      color: #64748b;
+      font-size: 0.925rem;
+    }
+
+    /* Weekly Comparison Circular Card Layout */
+    #wtt-app .wtt-analytics-grid {
+      display: block;
+    }
+
+    #wtt-app .wtt-circle-card {
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #wtt-app .wtt-section-heading {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0 0 20px 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    #wtt-app .wtt-ring-container {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0 16px;
+    }
+
+    #wtt-app .wtt-ring-svg {
+      width: 190px;
+      height: 190px;
+      transform: rotate(-90deg);
+    }
+
+    #wtt-app .wtt-ring-track {
+      fill: none;
+      stroke: #e2e8f0;
+      stroke-width: 14;
+    }
+
+    #wtt-app .wtt-ring-progress {
+      fill: none;
+      stroke: #16a34a;
+      stroke-width: 14;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.35s ease;
+    }
+
+    #wtt-app .wtt-ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #wtt-app .wtt-ring-percent {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    #wtt-app .wtt-ring-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    #wtt-app .wtt-circle-counts {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #334155;
+      margin: 0 0 20px 0;
+    }
+
+    /* Compact Weekly Comparison Summary Pills Inside Circle Card */
+    #wtt-app .wtt-weekly-summary-list {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 720px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    #wtt-app .wtt-week-pill {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      min-width: 105px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    #wtt-app .wtt-week-pill.is-highest {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    #wtt-app .wtt-week-pill-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    #wtt-app .wtt-week-pill-pct {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    #wtt-app .wtt-week-pill.is-highest .wtt-week-pill-pct {
+      color: #15803d;
+    }
+
+    /* ============================================================
+       HOME WIDGET VIEW (Compact, Minimal, Matching Theme)
+    ============================================================ */
+    #wtt-app .wtt-widget-wrapper {
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    #wtt-app .wtt-widget-card {
+      padding: 20px;
+    }
+
+    #wtt-app .wtt-widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    #wtt-app .wtt-widget-title-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #wtt-app .wtt-widget-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      letter-spacing: -0.015em;
+    }
+
+    #wtt-app .wtt-widget-day-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #15803d;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    #wtt-app .wtt-widget-counter {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Mon-Sun Quick Switch Pills inside Widget */
+    #wtt-app .wtt-widget-day-pills {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    #wtt-app .wtt-day-pill-btn {
+      appearance: none;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 6px 2px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    #wtt-app .wtt-day-pill-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    #wtt-app .wtt-day-pill-btn.is-active {
+      background: #16a34a;
+      border-color: #16a34a;
+      color: #ffffff;
+    }
+
+    #wtt-app .wtt-day-pill-btn:focus-visible {
+      outline: 2px solid #16a34a;
+      outline-offset: 1px;
+    }
+
+    /* Vertical Task List inside Widget */
+    #wtt-app .wtt-widget-list {
+      list-style: none;
+      margin: 0 0 16px 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #wtt-app .wtt-widget-item {
+      margin: 0;
+      padding: 0;
+    }
+
+    #wtt-app .wtt-widget-row-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    #wtt-app .wtt-widget-row-label:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    #wtt-app .wtt-widget-row-label.is-completed {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+
+    #wtt-app .wtt-widget-task-text {
+      font-size: 0.925rem;
+      font-weight: 500;
+      color: #0f172a;
+      word-break: break-word;
+      flex: 1;
+      transition: color 0.15s ease;
+    }
+
+    #wtt-app .wtt-widget-row-label.is-completed .wtt-widget-task-text {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    /* Widget Action Row */
+    #wtt-app .wtt-widget-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    #wtt-app .wtt-widget-action-btn {
+      flex: 1 1 auto;
+      height: 36px;
+      padding: 0 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    #wtt-app .wtt-widget-action-btn.is-primary {
+      background: #16a34a;
+      border: 1px solid #16a34a;
+      color: #ffffff;
+    }
+
+    #wtt-app .wtt-widget-action-btn.is-primary:hover {
+      background: #15803d;
+      border-color: #15803d;
+    }
+
+    #wtt-app .wtt-widget-action-btn.is-secondary {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+
+    #wtt-app .wtt-widget-action-btn.is-secondary:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    /* Inline Notice inside Widget (for Copy confirmation or PiP fallback) */
+    #wtt-app .wtt-widget-notice {
+      margin-top: 10px;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1.4;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    #wtt-app .wtt-widget-notice.is-info {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    #wtt-app .wtt-widget-notice.is-hidden {
+      display: none;
+    }
+
+    /* Compact 2-line Factual Note at Bottom of Widget */
+    #wtt-app .wtt-widget-note {
+      margin: 12px 0 0 0;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #64748b;
+      text-align: left;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 820px) {
+      #wtt-app .wtt-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 18px 16px;
+      }
+
+      #wtt-app .wtt-month-nav {
+        align-self: flex-start;
+      }
+
+      #wtt-app .wtt-header-controls {
+        flex: 1 1 auto;
+        justify-content: stretch;
+      }
+
+      #wtt-app .wtt-add-form {
+        max-width: 100%;
+        flex: 1 1 200px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #wtt-app {
+        padding: 16px 12px 36px;
+      }
+
+      #wtt-app .wtt-widget-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Root Scoped Application Container (Ready for WordPress Custom HTML Block) -->
+  <div id="wtt-app">
+
+    <!-- LOCAL STORAGE ACCESS REQUEST BANNER -->
+    <div id="wtt-storage-banner" class="wtt-storage-banner" role="region" aria-label="Local Storage Access Request">
+      <div class="wtt-storage-banner-text">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>Please allow <strong>Local Storage Access</strong> so your tasks and weekly progress are saved in your browser and never disappear after refreshing.</span>
+      </div>
+      <div class="wtt-storage-banner-actions">
+        <button type="button" id="wtt-grant-storage-btn" class="wtt-btn-primary">
+          Allow Local Storage Access
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         MAIN WEEKLY TRACKER VIEW
+    ============================================================ -->
+    <div id="wtt-main-view">
+      <!-- 1. TOP HEADER BAR -->
+      <header class="wtt-card wtt-header">
+        <div>
+          <h1 class="wtt-title">Weekly Tracker</h1>
+          <div id="wtt-storage-status-badge" class="wtt-storage-status" aria-live="polite">
+            <span class="wtt-storage-dot"></span>
+            <span id="wtt-storage-status-text">Local Storage Ready</span>
+          </div>
+        </div>
+
+        <!-- Week Navigation -->
+        <div class="wtt-month-nav" role="group" aria-label="Week navigation">
+          <button type="button" id="wtt-prev-month" class="wtt-month-btn" title="Previous Week" aria-label="Previous Week">
+            &#8249;
+          </button>
+          <span id="wtt-current-month-label" class="wtt-month-label" aria-live="polite">
+            Monday &ndash; Sunday
+          </span>
+          <button type="button" id="wtt-next-month" class="wtt-month-btn" title="Next Week" aria-label="Next Week">
+            &#8250;
+          </button>
+        </div>
+
+        <!-- Add New Task Form + Home Widget Secondary Button -->
+        <div class="wtt-header-controls">
+          <form id="wtt-add-task-form" class="wtt-add-form" autocomplete="off">
+            <input
+              type="text"
+              id="wtt-new-task-input"
+              class="wtt-input"
+              placeholder="Enter a new task..."
+              maxlength="60"
+              aria-label="New task name"
+            />
+            <button type="submit" class="wtt-btn-primary">
+              <span>+ Add Task</span>
+            </button>
+          </form>
+          <button type="button" id="wtt-open-widget-btn" class="wtt-btn-secondary" title="Open compact Home Widget view">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+            <span>Home Widget</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- 2. WEEKLY TASK TABLE -->
+      <section class="wtt-card wtt-table-card" aria-label="Weekly Task Table">
+        <div class="wtt-table-scroll">
+          <table class="wtt-table" id="wtt-task-table">
+            <thead id="wtt-table-head">
+              <!-- Dynamically populated with Task + Monday..Sunday columns -->
+            </thead>
+            <tbody id="wtt-table-body">
+              <!-- Dynamically populated with tasks and independent weekday checkboxes -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. WEEKLY COMPARISON CIRCULAR INDICATOR -->
+      <section class="wtt-analytics-grid" aria-label="Weekly Comparison Statistics">
+        <div class="wtt-card wtt-circle-card">
+          <h2 class="wtt-section-heading">Weekly Comparison</h2>
+          <div class="wtt-ring-container">
+            <svg class="wtt-ring-svg" viewBox="0 0 180 180" aria-hidden="true">
+              <circle class="wtt-ring-track" cx="90" cy="90" r="74"></circle>
+              <circle
+                id="wtt-progress-ring"
+                class="wtt-ring-progress"
+                cx="90"
+                cy="90"
+                r="74"
+                stroke-dasharray="464.9557"
+                stroke-dashoffset="464.9557"
+              ></circle>
+            </svg>
+            <div class="wtt-ring-center">
+              <span id="wtt-percent-text" class="wtt-ring-percent">0%</span>
+              <span class="wtt-ring-label">Weekly Score</span>
+            </div>
+          </div>
+          <p id="wtt-completed-summary" class="wtt-circle-counts">
+            0 / 0 tasks completed
+          </p>
+          <div id="wtt-weekly-comparison-pills" class="wtt-weekly-summary-list" aria-label="Weekday comparison">
+            <!-- Dynamically populated weekday comparison percentages -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================================================
+         COMPACT HOME WIDGET VIEW (#widget)
+    ============================================================ -->
+    <section id="wtt-widget-view" class="wtt-widget-wrapper wtt-hidden" aria-label="Home Widget View">
+      <div id="wtt-widget-card" class="wtt-card wtt-widget-card">
+        <!-- Dynamically populated and synced with main tracker state -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    (function () {
+      'use strict';
+
+      // Persistent localStorage keys
+      var STORAGE_KEY = 'wp_weekly_task_tracker_v1';
+      var STORAGE_ACCESS_KEY = 'wp_weekly_task_tracker_storage_access_v1';
+
+      // SVG Circle Circumference (r = 74 => 2 * Math.PI * 74 ≈ 464.9557)
+      var RING_CIRCUMFERENCE = 2 * Math.PI * 74;
+
+      // Weekdays list (Monday = 0 ... Sunday = 6)
+      var WEEKDAYS = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday'
+      ];
+
+      var WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      // Current active week number (1-indexed, navigable via < and >)
+      var currentWeekNumber = 1;
+
+      // Track which task is currently being renamed inline (null if none)
+      var editingTaskId = null;
+
+      // Home Widget state
+      var isWidgetMode = false;
+      var widgetSelectedDayIndex = getTodayWeekdayIndex();
+      var widgetNoticeText = '';
+      var widgetNoticeType = 'success'; // 'success' | 'info'
+      var copyFeedbackTimer = null;
+      var copySuccessActive = false;
+
+      // Live Document Picture-in-Picture window reference
+      var pipWindow = null;
+      var pipCardContainer = null;
+
+      // Application state persisted in localStorage
+      var state = {
+        tasks: [],
+        records: {}, // keyed by "week_N" -> { [taskId]: { [dayIndex]: boolean } }
+        currentWeekNumber: 1
+      };
+
+      /**
+       * Auto-detects today's weekday mapped to Monday=0 ... Sunday=6.
+       */
+      function getTodayWeekdayIndex() {
+        return (new Date().getDay() + 6) % 7;
+      }
+
+      /**
+       * Escapes special HTML characters to prevent XSS and broken markup when rendering tasks.
+       */
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      /**
+       * Helper to generate a storage key for the selected week.
+       */
+      function getWeekKey(weekNum) {
+        return 'week_' + weekNum;
+      }
+
+      /**
+       * Returns the 7 weekdays (Monday through Sunday) as column definitions.
+       */
+      function getWeekdaysList() {
+        var days = [];
+        for (var i = 0; i < WEEKDAYS.length; i++) {
+          days.push({
+            index: i,
+            label: WEEKDAYS[i],
+            shortLabel: WEEKDAYS_SHORT[i]
+          });
+        }
+        return days;
+      }
+
+      /**
+       * Initializes default tasks and sample checkboxes for Week 1
+       * if localStorage has no saved state yet.
+       */
+      function createDefaultState() {
+        var initialWeekKey = getWeekKey(1);
+        var defaultTasks = [
+          { id: 'task_physics', name: 'Physics' },
+          { id: 'task_mathematics', name: 'Mathematics' },
+          { id: 'task_chemistry', name: 'Chemistry' },
+          { id: 'task_english', name: 'English' }
+        ];
+
+        var initialRecords = {};
+        initialRecords[initialWeekKey] = {
+          'task_physics': { 1: true },               // Tuesday checked
+          'task_mathematics': { 0: true, 1: true },  // Monday & Tuesday checked
+          'task_chemistry': { 0: true, 2: true },    // Monday & Wednesday checked
+          'task_english': {}                         // None checked
+        };
+
+        return {
+          tasks: defaultTasks,
+          records: initialRecords,
+          currentWeekNumber: 1
+        };
+      }
+
+      /**
+       * Updates the visual status badge indicating Local Storage state.
+       */
+      function updateStorageStatusUI(message, isError) {
+        var statusTextEl = document.getElementById('wtt-storage-status-text');
+        var badgeEl = document.getElementById('wtt-storage-status-badge');
+        if (statusTextEl) {
+          statusTextEl.textContent = message;
+        }
+        if (badgeEl) {
+          if (isError) {
+            badgeEl.classList.add('is-error');
+          } else {
+            badgeEl.classList.remove('is-error');
+          }
+        }
+      }
+
+      /**
+       * Checks if the user has already granted Local Storage access and toggles the prompt banner.
+       */
+      function checkStorageAccessBanner() {
+        var bannerEl = document.getElementById('wtt-storage-banner');
+        if (!bannerEl) return;
+
+        try {
+          var granted = window.localStorage.getItem(STORAGE_ACCESS_KEY);
+          if (granted === 'granted') {
+            bannerEl.classList.add('is-hidden');
+            updateStorageStatusUI('Saved in Local Storage', false);
+          } else {
+            bannerEl.classList.remove('is-hidden');
+            updateStorageStatusUI('Click "Allow Local Storage Access" above', false);
+          }
+        } catch (err) {
+          bannerEl.classList.remove('is-hidden');
+          updateStorageStatusUI('Storage permission required', true);
+        }
+      }
+
+      /**
+       * Requests browser storage access (supports embedded iframes & persistent storage API)
+       * and saves all tasks into localStorage immediately with graceful fallback.
+       */
+      function requestUserStorageAccess() {
+        var finalizeGrant = function () {
+          try {
+            window.localStorage.setItem(STORAGE_ACCESS_KEY, 'granted');
+            saveState();
+            var bannerEl = document.getElementById('wtt-storage-banner');
+            if (bannerEl) {
+              bannerEl.classList.add('is-hidden');
+            }
+            updateStorageStatusUI('Local Storage Active \u2022 All tasks saved', false);
+          } catch (err) {
+            updateStorageStatusUI('Unable to access Local Storage in this browser mode', true);
+          }
+        };
+
+        try {
+          if (typeof document.requestStorageAccess === 'function') {
+            document.requestStorageAccess()
+              .then(function () {
+                if (navigator.storage && typeof navigator.storage.persist === 'function') {
+                  return navigator.storage.persist();
+                }
+              })
+              .then(finalizeGrant)
+              .catch(finalizeGrant);
+          } else if (navigator.storage && typeof navigator.storage.persist === 'function') {
+            navigator.storage.persist()
+              .then(finalizeGrant)
+              .catch(finalizeGrant);
+          } else {
+            finalizeGrant();
+          }
+        } catch (err) {
+          finalizeGrant();
+        }
+      }
+
+      /**
+       * Loads state from localStorage safely with fallback to default sample data.
+       */
+      function loadState() {
+        try {
+          var raw = window.localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            state = createDefaultState();
+            currentWeekNumber = 1;
+            saveState();
+            return;
+          }
+          var parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.tasks) && typeof parsed.records === 'object' && parsed.records !== null) {
+            state = parsed;
+            if (typeof parsed.currentWeekNumber === 'number' && parsed.currentWeekNumber >= 1) {
+              currentWeekNumber = parsed.currentWeekNumber;
+            } else {
+              currentWeekNumber = 1;
+            }
+          } else {
+            state = createDefaultState();
+            currentWeekNumber = 1;
+            saveState();
+          }
+        } catch (err) {
+          state = createDefaultState();
+          currentWeekNumber = 1;
+        }
+      }
+
+      /**
+       * Persists current state to localStorage immediately so tasks never disappear on refresh.
+       */
+      function saveState() {
+        try {
+          state.currentWeekNumber = currentWeekNumber;
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          var granted = window.localStorage.getItem(STORAGE_ACCESS_KEY);
+          if (granted === 'granted') {
+            updateStorageStatusUI('Saved to Local Storage (' + state.tasks.length + ' tasks)', false);
+          }
+        } catch (err) {
+          updateStorageStatusUI('Local Storage blocked \u2014 click Allow above', true);
+        }
+      }
+
+      /**
+       * Checks whether a specific task's checkbox is checked for a given week and weekday index.
+       */
+      function isTaskChecked(weekKey, taskId, dayIndex) {
+        if (!state.records[weekKey]) return false;
+        if (!state.records[weekKey][taskId]) return false;
+        return Boolean(state.records[weekKey][taskId][dayIndex]);
+      }
+
+      /**
+       * Updates a checkbox state for a specific week, task, and weekday index,
+       * keeping localStorage, main table, circular comparison, inline widget, and PiP in sync.
+       */
+      function setTaskChecked(weekKey, taskId, dayIndex, isChecked, source) {
+        if (!state.records[weekKey]) {
+          state.records[weekKey] = {};
+        }
+        if (!state.records[weekKey][taskId]) {
+          state.records[weekKey][taskId] = {};
+        }
+
+        if (isChecked) {
+          state.records[weekKey][taskId][dayIndex] = true;
+        } else {
+          delete state.records[weekKey][taskId][dayIndex];
+        }
+
+        saveState();
+
+        // Keep main table checkboxes synced when toggled from Widget or PiP
+        if (source !== 'table') {
+          var tableCheckbox = document.querySelector(
+            '#wtt-table-body .wtt-checkbox-input[data-task-id="' + taskId + '"][data-week-index="' + dayIndex + '"]'
+          );
+          if (tableCheckbox) {
+            tableCheckbox.checked = Boolean(isChecked);
+          }
+        }
+
+        updateAnalyticsOnly();
+        renderAllWidgets();
+      }
+
+      /**
+       * Adds a new task, saves it immediately to localStorage, and renders all views.
+       */
+      function addTask(rawName) {
+        var cleanName = String(rawName || '').trim();
+        if (!cleanName) return false;
+
+        var newTask = {
+          id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+          name: cleanName
+        };
+
+        state.tasks.push(newTask);
+        saveState();
+        renderApp();
+        return true;
+      }
+
+      /**
+       * Renames an existing task and persists the updated task list to localStorage.
+       */
+      function renameTask(taskId, newName) {
+        var cleanName = String(newName || '').trim();
+        if (!cleanName) {
+          editingTaskId = null;
+          renderTable();
+          return;
+        }
+
+        for (var i = 0; i < state.tasks.length; i++) {
+          if (state.tasks[i].id === taskId) {
+            state.tasks[i].name = cleanName;
+            break;
+          }
+        }
+
+        editingTaskId = null;
+        saveState();
+        renderApp();
+      }
+
+      /**
+       * Deletes a task and removes its checkbox records, then saves to localStorage.
+       */
+      function deleteTask(taskId) {
+        state.tasks = state.tasks.filter(function (t) {
+          return t.id !== taskId;
+        });
+
+        var weekKeys = Object.keys(state.records);
+        for (var i = 0; i < weekKeys.length; i++) {
+          var wk = weekKeys[i];
+          if (state.records[wk] && state.records[wk][taskId]) {
+            delete state.records[wk][taskId];
+          }
+        }
+
+        if (editingTaskId === taskId) {
+          editingTaskId = null;
+        }
+
+        saveState();
+        renderApp();
+      }
+
+      /**
+       * Renders the Weekly Task Table (Header + Rows) for Monday through Sunday.
+       */
+      function renderTable() {
+        var weekLabelEl = document.getElementById('wtt-current-month-label');
+        var theadEl = document.getElementById('wtt-table-head');
+        var tbodyEl = document.getElementById('wtt-table-body');
+        if (!weekLabelEl || !theadEl || !tbodyEl) return;
+
+        weekLabelEl.textContent = currentWeekNumber === 1
+          ? 'Monday \u2013 Sunday'
+          : 'Week ' + currentWeekNumber + ' (Mon \u2013 Sun)';
+
+        var days = getWeekdaysList();
+        var weekKey = getWeekKey(currentWeekNumber);
+
+        // Build Table Header with Monday through Sunday
+        var headHtml = '<tr>';
+        headHtml += '<th scope="col" class="wtt-col-task">Task</th>';
+        for (var d = 0; d < days.length; d++) {
+          headHtml += '<th scope="col">';
+          headHtml += '<span class="wtt-week-title">' + days[d].label + '</span>';
+          headHtml += '</th>';
+        }
+        headHtml += '</tr>';
+        theadEl.innerHTML = headHtml;
+
+        // Handle Empty Task List
+        if (state.tasks.length === 0) {
+          tbodyEl.innerHTML =
+            '<tr><td colspan="' + (days.length + 1) + '" class="wtt-empty-state">' +
+            'No tasks yet. Use the field above to add your first weekly task.' +
+            '</td></tr>';
+          return;
+        }
+
+        // Build Task Rows
+        var bodyHtml = '';
+        for (var t = 0; t < state.tasks.length; t++) {
+          var task = state.tasks[t];
+          bodyHtml += '<tr data-task-id="' + escapeHtml(task.id) + '">';
+
+          // Sticky First Column: Task Name or Inline Rename Input
+          bodyHtml += '<td class="wtt-cell-task">';
+          if (editingTaskId === task.id) {
+            bodyHtml += '<div class="wtt-rename-wrap">';
+            bodyHtml += '<input type="text" class="wtt-rename-input" id="wtt-edit-input-' + escapeHtml(task.id) + '" value="' + escapeHtml(task.name) + '" maxlength="60" aria-label="Rename task" />';
+            bodyHtml += '<button type="button" class="wtt-icon-btn" data-action="save-rename" data-task-id="' + escapeHtml(task.id) + '" title="Save" aria-label="Save task name">';
+            bodyHtml += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            bodyHtml += '</button>';
+            bodyHtml += '<button type="button" class="wtt-icon-btn" data-action="cancel-rename" data-task-id="' + escapeHtml(task.id) + '" title="Cancel" aria-label="Cancel rename">';
+            bodyHtml += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            bodyHtml += '</button>';
+            bodyHtml += '</div>';
+          } else {
+            bodyHtml += '<div class="wtt-task-row-inner">';
+            bodyHtml += '<span class="wtt-task-name" data-action="start-rename" data-task-id="' + escapeHtml(task.id) + '" title="Click to rename">' + escapeHtml(task.name) + '</span>';
+            bodyHtml += '<div class="wtt-task-actions">';
+            bodyHtml += '<button type="button" class="wtt-icon-btn" data-action="start-rename" data-task-id="' + escapeHtml(task.id) + '" title="Rename task" aria-label="Rename ' + escapeHtml(task.name) + '">';
+            bodyHtml += '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+            bodyHtml += '</button>';
+            bodyHtml += '<button type="button" class="wtt-icon-btn wtt-delete-btn" data-action="delete-task" data-task-id="' + escapeHtml(task.id) + '" title="Delete task" aria-label="Delete ' + escapeHtml(task.name) + '">';
+            bodyHtml += '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+            bodyHtml += '</button>';
+            bodyHtml += '</div>';
+            bodyHtml += '</div>';
+          }
+          bodyHtml += '</td>';
+
+          // Weekday Checkbox Cells (Monday - Sunday)
+          for (var dIdx = 0; dIdx < days.length; dIdx++) {
+            var checked = isTaskChecked(weekKey, task.id, dIdx);
+            var checkAttr = checked ? ' checked' : '';
+            var ariaLabel = escapeHtml(task.name) + ' - ' + days[dIdx].label;
+
+            bodyHtml += '<td class="wtt-cell-check">';
+            bodyHtml += '<label class="wtt-checkbox-label">';
+            bodyHtml += '<input type="checkbox" class="wtt-checkbox-input" data-task-id="' + escapeHtml(task.id) + '" data-week-index="' + dIdx + '"' + checkAttr + ' aria-label="' + ariaLabel + '" />';
+            bodyHtml += '<span class="wtt-checkbox-box">';
+            bodyHtml += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            bodyHtml += '</span>';
+            bodyHtml += '</label>';
+            bodyHtml += '</td>';
+          }
+
+          bodyHtml += '</tr>';
+        }
+
+        tbodyEl.innerHTML = bodyHtml;
+
+        // Focus inline input if currently editing a task name
+        if (editingTaskId) {
+          var editInput = document.getElementById('wtt-edit-input-' + editingTaskId);
+          if (editInput) {
+            editInput.focus();
+            editInput.select();
+          }
+        }
+      }
+
+      /**
+       * Calculates statistics and updates the Weekly Comparison Circular Indicator
+       * and weekday-by-weekday (Monday - Sunday) comparison pills immediately.
+       */
+      function updateAnalyticsOnly() {
+        var days = getWeekdaysList();
+        var weekKey = getWeekKey(currentWeekNumber);
+        var numTasks = state.tasks.length;
+        var numDays = days.length;
+
+        var totalApplicableCheckboxes = numTasks * numDays;
+        var totalChecked = 0;
+        var dailyPercentages = [];
+
+        for (var d = 0; d < numDays; d++) {
+          var checkedInDay = 0;
+          for (var t = 0; t < numTasks; t++) {
+            if (isTaskChecked(weekKey, state.tasks[t].id, d)) {
+              checkedInDay++;
+              totalChecked++;
+            }
+          }
+          var dayPct = numTasks > 0 ? Math.round((checkedInDay / numTasks) * 100) : 0;
+          dailyPercentages.push(dayPct);
+        }
+
+        // 1. Update Circular Weekly Comparison Indicator
+        var overallPercent = totalApplicableCheckboxes > 0
+          ? Math.round((totalChecked / totalApplicableCheckboxes) * 100)
+          : 0;
+
+        var ringEl = document.getElementById('wtt-progress-ring');
+        var percentTextEl = document.getElementById('wtt-percent-text');
+        var summaryTextEl = document.getElementById('wtt-completed-summary');
+
+        if (ringEl && percentTextEl && summaryTextEl) {
+          var dashOffset = RING_CIRCUMFERENCE - (overallPercent / 100) * RING_CIRCUMFERENCE;
+          ringEl.style.strokeDashoffset = String(dashOffset);
+          percentTextEl.textContent = overallPercent + '%';
+          summaryTextEl.textContent = totalChecked + ' / ' + totalApplicableCheckboxes + ' tasks completed';
+        }
+
+        // 2. Render Weekday Comparison Breakdown (Monday - Sunday) inside the Circle Card
+        var maxPct = numTasks > 0 && dailyPercentages.length > 0
+          ? Math.max.apply(null, dailyPercentages)
+          : -1;
+
+        var pillsContainer = document.getElementById('wtt-weekly-comparison-pills');
+        if (pillsContainer) {
+          var pillsHtml = '';
+          for (var i = 0; i < numDays; i++) {
+            var pct = dailyPercentages[i];
+            var isHighest = numTasks > 0 && maxPct > 0 && pct === maxPct;
+            var pillClass = isHighest ? 'wtt-week-pill is-highest' : 'wtt-week-pill';
+
+            pillsHtml += '<div class="' + pillClass + '">';
+            pillsHtml += '<span class="wtt-week-pill-title">' + days[i].label + '</span>';
+            pillsHtml += '<span class="wtt-week-pill-pct">' + pct + '%</span>';
+            pillsHtml += '</div>';
+          }
+          pillsContainer.innerHTML = pillsHtml;
+        }
+      }
+
+      /* ============================================================
+         HOME WIDGET VIEW RENDERING, URL COPY & DOCUMENT PiP
+      ============================================================ */
+
+      /**
+       * Generates HTML for the compact Home Widget card.
+       * Shared between the inline #widget view and the floating Document PiP window.
+       */
+      function buildWidgetHtml(isPipContext) {
+        var weekKey = getWeekKey(currentWeekNumber);
+        var dayIndex = widgetSelectedDayIndex;
+        var dayName = WEEKDAYS[dayIndex] || 'Monday';
+        var totalTasks = state.tasks.length;
+        var completedTasks = 0;
+
+        for (var i = 0; i < totalTasks; i++) {
+          if (isTaskChecked(weekKey, state.tasks[i].id, dayIndex)) {
+            completedTasks++;
+          }
+        }
+
+        var html = '';
+
+        // Widget Header: Today's Tasks + Weekday Badge + Compact Counter
+        html += '<div class="wtt-widget-header">';
+        html += '  <div class="wtt-widget-title-group">';
+        html += '    <h2 class="wtt-widget-title">Today&#39;s Tasks</h2>';
+        html += '    <span class="wtt-widget-day-badge">' + escapeHtml(dayName) + '</span>';
+        html += '  </div>';
+        html += '  <span class="wtt-widget-counter" aria-label="Completed tasks">' + completedTasks + ' / ' + totalTasks + '</span>';
+        html += '</div>';
+
+        // Subtle Mon-Sun Quick-Switch Pills
+        html += '<div class="wtt-widget-day-pills" role="tablist" aria-label="Select weekday">';
+        for (var d = 0; d < WEEKDAYS_SHORT.length; d++) {
+          var activeClass = d === dayIndex ? ' is-active' : '';
+          var ariaSelected = d === dayIndex ? 'true' : 'false';
+          html += '<button type="button" class="wtt-day-pill-btn' + activeClass + '" role="tab" aria-selected="' + ariaSelected + '" data-widget-action="select-day" data-day-index="' + d + '" title="' + WEEKDAYS[d] + '">';
+          html += WEEKDAYS_SHORT[d];
+          html += '</button>';
+        }
+        html += '</div>';
+
+        // Vertical Task List
+        if (totalTasks === 0) {
+          html += '<div class="wtt-empty-state" style="padding: 20px 12px;">No tasks yet. Open Full Tracker to add tasks.</div>';
+        } else {
+          html += '<ul class="wtt-widget-list">';
+          for (var t = 0; t < totalTasks; t++) {
+            var task = state.tasks[t];
+            var checked = isTaskChecked(weekKey, task.id, dayIndex);
+            var completedClass = checked ? ' is-completed' : '';
+            var checkedAttr = checked ? ' checked' : '';
+
+            html += '<li class="wtt-widget-item">';
+            html += '  <label class="wtt-widget-row-label' + completedClass + '">';
+            html += '    <input type="checkbox" class="wtt-checkbox-input wtt-widget-checkbox" data-task-id="' + escapeHtml(task.id) + '" data-day-index="' + dayIndex + '"' + checkedAttr + ' aria-label="' + escapeHtml(task.name) + ' - ' + escapeHtml(dayName) + '" />';
+            html += '    <span class="wtt-checkbox-box">';
+            html += '      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            html += '    </span>';
+            html += '    <span class="wtt-widget-task-text">' + escapeHtml(task.name) + '</span>';
+            html += '  </label>';
+            html += '</li>';
+          }
+          html += '</ul>';
+        }
+
+        // Action Row at Bottom of Widget Card
+        html += '<div class="wtt-widget-actions">';
+        html += '  <button type="button" class="wtt-widget-action-btn is-primary" data-widget-action="full-tracker">';
+        html += '    Full Tracker';
+        html += '  </button>';
+        html += '  <button type="button" class="wtt-widget-action-btn is-secondary" data-widget-action="copy-url">';
+        html += copySuccessActive ? 'Copied!' : 'Copy Widget URL';
+        html += '  </button>';
+        if (isPipContext) {
+          html += '  <button type="button" class="wtt-widget-action-btn is-secondary" data-widget-action="close-pip">';
+          html += '    Close Pop-out';
+          html += '  </button>';
+        } else {
+          html += '  <button type="button" class="wtt-widget-action-btn is-secondary" data-widget-action="popout-widget">';
+          html += '    Pop-out Widget';
+          html += '  </button>';
+        }
+        html += '</div>';
+
+        // Inline Notice Area (for Copy confirmation or PiP browser notice)
+        var noticeHiddenClass = widgetNoticeText ? '' : ' is-hidden';
+        var noticeTypeClass = widgetNoticeType === 'info' ? ' is-info' : '';
+        html += '<div class="wtt-widget-notice' + noticeTypeClass + noticeHiddenClass + '" role="status" aria-live="polite">';
+        html += escapeHtml(widgetNoticeText);
+        html += '</div>';
+
+        // Compact 2-line Factual Note
+        html += '<p class="wtt-widget-note">';
+        html += 'Browsers cannot directly place native widgets on a phone home screen. Use &ldquo;Add to Home Screen&rdquo; for a 1-tap widget shortcut, or paste the copied #widget URL into an Android web-widget app (e.g., WebWidget or Hermit).';
+        html += '</p>';
+
+        return html;
+      }
+
+      /**
+       * Renders both the inline Home Widget card and the live PiP card (if open).
+       */
+      function renderAllWidgets() {
+        var mainWidgetCard = document.getElementById('wtt-widget-card');
+        if (mainWidgetCard) {
+          mainWidgetCard.innerHTML = buildWidgetHtml(false);
+        }
+        if (pipWindow && !pipWindow.closed && pipCardContainer) {
+          pipCardContainer.innerHTML = buildWidgetHtml(true);
+        }
+      }
+
+      /**
+       * Shows an inline status/info notice inside the widget card.
+       */
+      function showWidgetNotice(message, type) {
+        widgetNoticeText = message;
+        widgetNoticeType = type || 'success';
+        renderAllWidgets();
+      }
+
+      /**
+       * Enters Home Widget view and sets location.hash to '#widget'.
+       */
+      function enterWidgetMode(updateHash) {
+        isWidgetMode = true;
+        editingTaskId = null;
+        widgetNoticeText = '';
+        syncViewVisibility();
+        renderAllWidgets();
+
+        if (updateHash !== false) {
+          try {
+            if (window.location.hash !== '#widget') {
+              window.location.hash = '#widget';
+            }
+          } catch (err) {
+            // Safe fallback in restricted frames
+          }
+        }
+      }
+
+      /**
+       * Exits Home Widget view, clears '#widget' hash, and re-renders main tracker.
+       */
+      function exitWidgetMode(updateHash) {
+        isWidgetMode = false;
+        widgetNoticeText = '';
+        syncViewVisibility();
+        renderApp();
+
+        if (updateHash !== false) {
+          try {
+            if (window.location.hash === '#widget') {
+              if (window.history && typeof window.history.replaceState === 'function') {
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              } else {
+                window.location.hash = '';
+              }
+            }
+          } catch (err) {
+            try {
+              window.location.hash = '';
+            } catch (e2) {
+              // Ignore restricted frame hash errors
+            }
+          }
+        }
+      }
+
+      /**
+       * Toggles DOM visibility between Main Tracker view and Home Widget view.
+       */
+      function syncViewVisibility() {
+        var mainView = document.getElementById('wtt-main-view');
+        var widgetView = document.getElementById('wtt-widget-view');
+        if (!mainView || !widgetView) return;
+
+        if (isWidgetMode) {
+          mainView.classList.add('wtt-hidden');
+          widgetView.classList.remove('wtt-hidden');
+        } else {
+          widgetView.classList.add('wtt-hidden');
+          mainView.classList.remove('wtt-hidden');
+        }
+      }
+
+      /**
+       * Copies the current page URL with '#widget' hash using execCommand('copy')
+       * so it works reliably both standalone and inside iframes.
+       */
+      function copyWidgetUrl(targetDocument) {
+        var doc = targetDocument || document;
+        var baseUrl = window.location.href.split('#')[0];
+        var widgetUrl = baseUrl + '#widget';
+        var copied = false;
+
+        try {
+          var tempInput = doc.createElement('textarea');
+          tempInput.value = widgetUrl;
+          tempInput.setAttribute('readonly', '');
+          tempInput.style.position = 'fixed';
+          tempInput.style.left = '-9999px';
+          tempInput.style.top = '0';
+          tempInput.style.opacity = '0';
+          doc.body.appendChild(tempInput);
+          tempInput.focus();
+          tempInput.select();
+          tempInput.setSelectionRange(0, widgetUrl.length);
+          copied = doc.execCommand('copy');
+          doc.body.removeChild(tempInput);
+        } catch (err) {
+          copied = false;
+        }
+
+        if (copied) {
+          copySuccessActive = true;
+          showWidgetNotice('Widget URL copied: ' + widgetUrl, 'success');
+          if (copyFeedbackTimer) {
+            clearTimeout(copyFeedbackTimer);
+          }
+          copyFeedbackTimer = setTimeout(function () {
+            copySuccessActive = false;
+            renderAllWidgets();
+          }, 2200);
+        } else {
+          showWidgetNotice('Copy manually: ' + widgetUrl, 'info');
+        }
+      }
+
+      /**
+       * Opens the live interactive Home Widget card inside a floating Document Picture-in-Picture window
+       * when supported, synced in real time with the main state and localStorage.
+       */
+      function openPipWidget() {
+        if (!('documentPictureInPicture' in window) || typeof window.documentPictureInPicture.requestWindow !== 'function') {
+          showWidgetNotice('Floating pop-out requires desktop Chrome or Edge.', 'info');
+          return;
+        }
+
+        if (pipWindow && !pipWindow.closed) {
+          try {
+            pipWindow.focus();
+          } catch (err) {
+            // Ignore focus error
+          }
+          return;
+        }
+
+        window.documentPictureInPicture.requestWindow({
+          width: 400,
+          height: 540
+        }).then(function (win) {
+          pipWindow = win;
+          win.document.title = "Today's Tasks — Weekly Tracker";
+
+          // Inject scoped styles into the PiP window head
+          var mainStyleEl = document.getElementById('wtt-styles');
+          if (mainStyleEl) {
+            var clonedStyle = win.document.createElement('style');
+            clonedStyle.textContent = mainStyleEl.textContent;
+            win.document.head.appendChild(clonedStyle);
+          }
+
+          // Create scoped root container in PiP window
+          var pipRoot = win.document.createElement('div');
+          pipRoot.id = 'wtt-app';
+          pipRoot.className = 'wtt-pip-root';
+
+          pipCardContainer = win.document.createElement('div');
+          pipCardContainer.className = 'wtt-card wtt-widget-card';
+          pipRoot.appendChild(pipCardContainer);
+
+          win.document.body.innerHTML = '';
+          win.document.body.appendChild(pipRoot);
+
+          // Bind interactive listeners inside the PiP card
+          attachWidgetListeners(pipCardContainer, win.document, true);
+
+          // Clean up when PiP window is closed
+          win.addEventListener('pagehide', function () {
+            pipWindow = null;
+            pipCardContainer = null;
+          });
+
+          widgetNoticeText = '';
+          renderAllWidgets();
+        }).catch(function () {
+          showWidgetNotice('Floating pop-out could not be opened. Requires desktop Chrome or Edge.', 'info');
+        });
+      }
+
+      /**
+       * Attaches delegated click & change listeners to a widget card container
+       * (used for both inline #widget view and floating PiP window).
+       */
+      function attachWidgetListeners(containerEl, targetDoc, isPipContext) {
+        if (!containerEl) return;
+
+        // Checkbox toggle inside widget (clicking anywhere on row or checkbox)
+        containerEl.addEventListener('change', function (e) {
+          var target = e.target;
+          if (target && target.classList.contains('wtt-widget-checkbox')) {
+            var taskId = target.getAttribute('data-task-id');
+            var dayIndex = parseInt(target.getAttribute('data-day-index'), 10);
+            var weekKey = getWeekKey(currentWeekNumber);
+            setTaskChecked(weekKey, taskId, dayIndex, target.checked, 'widget');
+          }
+        });
+
+        // Button clicks inside widget (weekday switch, Full Tracker, Copy URL, Pop-out)
+        containerEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-widget-action]');
+          if (!btn) return;
+
+          var action = btn.getAttribute('data-widget-action');
+
+          if (action === 'select-day') {
+            var newDayIdx = parseInt(btn.getAttribute('data-day-index'), 10);
+            if (!isNaN(newDayIdx) && newDayIdx >= 0 && newDayIdx <= 6) {
+              widgetSelectedDayIndex = newDayIdx;
+              widgetNoticeText = '';
+              renderAllWidgets();
+            }
+          } else if (action === 'full-tracker') {
+            exitWidgetMode(true);
+            if (isPipContext && pipWindow && !pipWindow.closed) {
+              try {
+                window.focus();
+              } catch (err) {
+                // Ignore focus restriction
+              }
+              pipWindow.close();
+            }
+          } else if (action === 'copy-url') {
+            copyWidgetUrl(targetDoc);
+          } else if (action === 'popout-widget') {
+            openPipWidget();
+          } else if (action === 'close-pip') {
+            if (pipWindow && !pipWindow.closed) {
+              pipWindow.close();
+            }
+          }
+        });
+      }
+
+      /**
+       * Full render of table, circular analytics, and widget views.
+       */
+      function renderApp() {
+        syncViewVisibility();
+        renderTable();
+        updateAnalyticsOnly();
+        renderAllWidgets();
+      }
+
+      /**
+       * Event Listeners Setup
+       */
+      function bindEvents() {
+        // Grant Local Storage Access Button
+        var grantStorageBtn = document.getElementById('wtt-grant-storage-btn');
+        if (grantStorageBtn) {
+          grantStorageBtn.addEventListener('click', function () {
+            requestUserStorageAccess();
+          });
+        }
+
+        // Open Home Widget View Button
+        var openWidgetBtn = document.getElementById('wtt-open-widget-btn');
+        if (openWidgetBtn) {
+          openWidgetBtn.addEventListener('click', function () {
+            enterWidgetMode(true);
+          });
+        }
+
+        // Inline Widget Card Events
+        var mainWidgetCard = document.getElementById('wtt-widget-card');
+        attachWidgetListeners(mainWidgetCard, document, false);
+
+        // Hash Routing (#widget <-> full tracker)
+        window.addEventListener('hashchange', function () {
+          if (window.location.hash === '#widget') {
+            enterWidgetMode(false);
+          } else if (isWidgetMode) {
+            exitWidgetMode(false);
+          }
+        });
+
+        // Cross-tab localStorage sync (keeps pinned #widget tabs & main tracker synced)
+        window.addEventListener('storage', function (e) {
+          if (e.key === STORAGE_KEY) {
+            loadState();
+            renderApp();
+          }
+        });
+
+        // Ensure state is flushed to localStorage right before page refresh/unload
+        window.addEventListener('beforeunload', function () {
+          saveState();
+        });
+
+        // Previous Week Navigation
+        var prevBtn = document.getElementById('wtt-prev-month');
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function () {
+            editingTaskId = null;
+            if (currentWeekNumber > 1) {
+              currentWeekNumber--;
+            } else {
+              currentWeekNumber = 52;
+            }
+            saveState();
+            renderApp();
+          });
+        }
+
+        // Next Week Navigation
+        var nextBtn = document.getElementById('wtt-next-month');
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function () {
+            editingTaskId = null;
+            if (currentWeekNumber < 52) {
+              currentWeekNumber++;
+            } else {
+              currentWeekNumber = 1;
+            }
+            saveState();
+            renderApp();
+          });
+        }
+
+        // Add New Task Form Submission
+        var addForm = document.getElementById('wtt-add-task-form');
+        var newTaskInput = document.getElementById('wtt-new-task-input');
+
+        if (addForm && newTaskInput) {
+          addForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var added = addTask(newTaskInput.value);
+            if (added) {
+              newTaskInput.value = '';
+              newTaskInput.focus();
+            }
+          });
+        }
+
+        // Table Body Delegated Events (Checkboxes, Rename, Delete)
+        var tbodyEl = document.getElementById('wtt-table-body');
+        if (tbodyEl) {
+          // Checkbox state change
+          tbodyEl.addEventListener('change', function (e) {
+            var target = e.target;
+            if (target && target.classList.contains('wtt-checkbox-input')) {
+              var taskId = target.getAttribute('data-task-id');
+              var dayIndex = parseInt(target.getAttribute('data-week-index'), 10);
+              var weekKey = getWeekKey(currentWeekNumber);
+              setTaskChecked(weekKey, taskId, dayIndex, target.checked, 'table');
+            }
+          });
+
+          // Click actions for Rename, Save, Cancel, Delete
+          tbodyEl.addEventListener('click', function (e) {
+            var actionEl = e.target.closest('[data-action]');
+            if (!actionEl) return;
+
+            var action = actionEl.getAttribute('data-action');
+            var taskId = actionEl.getAttribute('data-task-id');
+
+            if (action === 'start-rename') {
+              editingTaskId = taskId;
+              renderTable();
+            } else if (action === 'save-rename') {
+              var inputEl = document.getElementById('wtt-edit-input-' + taskId);
+              if (inputEl) {
+                renameTask(taskId, inputEl.value);
+              }
+            } else if (action === 'cancel-rename') {
+              editingTaskId = null;
+              renderTable();
+            } else if (action === 'delete-task') {
+              deleteTask(taskId);
+            }
+          });
+
+          // Keyboard shortcuts inside inline rename input (Enter to Save, Escape to Cancel)
+          tbodyEl.addEventListener('keydown', function (e) {
+            if (!e.target.classList.contains('wtt-rename-input')) return;
+
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              renameTask(editingTaskId, e.target.value);
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              editingTaskId = null;
+              renderTable();
+            }
+          });
+        }
+      }
+
+      // Initialize tracker on DOM ready
+      function init() {
+        loadState();
+        checkStorageAccessBanner();
+
+        // Check if loaded directly with #widget hash
+        if (window.location.hash === '#widget') {
+          isWidgetMode = true;
+        }
+
+        bindEvents();
+        renderApp();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
